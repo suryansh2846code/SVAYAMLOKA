@@ -404,6 +404,223 @@ body::after {
 .dialogue__text { font-family: var(--mono); font-size: 14px; line-height: 1.6; }
 .dialogue__text .caret { color: var(--vermillion); animation: blink 0.8s step-end infinite; }
 
+.dialogue__cta {
+  display: inline-block;
+  margin-top: 14px;
+  font-family: var(--display);
+  font-size: 14px;
+  letter-spacing: 2px;
+  padding: 10px 18px;
+  background: var(--marigold);
+  color: var(--ink);
+  border: 3px solid var(--ink);
+  box-shadow: var(--shadow-hard-sm);
+  text-decoration: none;
+  transition: transform .1s ease, box-shadow .1s ease;
+}
+.dialogue__cta:hover { transform: translate(-3px,-3px); box-shadow: 8px 8px 0 var(--ink); }
+
+/* ══════════════════════════════════════════════════════════
+   HUD MAP BUTTON
+   ══════════════════════════════════════════════════════════ */
+.hud__map {
+  cursor: pointer;
+  background: var(--marigold);
+  color: var(--ink);
+  border: none;
+  border-right: var(--border);
+  font-family: var(--mono);
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.hud__map:hover { background: var(--vermillion); color: var(--paper); }
+
+/* ══════════════════════════════════════════════════════════
+   YANTRA HUB — realm selector
+   ══════════════════════════════════════════════════════════ */
+.yantra {
+  position: relative;
+  width: min(560px, 92vw);
+  aspect-ratio: 1 / 1;
+  margin: 10px auto 0;
+}
+.yantra__web { position: absolute; inset: 0; width: 100%; height: 100%; color: var(--indigo); }
+.yantra__ring { fill: none; stroke: currentColor; stroke-width: 2; opacity: .35; }
+.yantra__spoke { stroke: currentColor; stroke-width: 1.5; opacity: .25; }
+.yantra__core {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  display: grid; place-items: center;
+  text-align: center;
+  pointer-events: none;
+}
+.yantra__om {
+  font-family: var(--serif);
+  font-size: clamp(40px, 9vw, 76px);
+  color: var(--vermillion);
+  text-shadow: 3px 3px 0 var(--gold);
+  animation: spin 80s linear infinite;
+}
+.yantra__hint { font-family: var(--mono); font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--indigo); }
+.yantra__node {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  width: 118px;
+  padding: 10px 6px;
+  background: var(--paper);
+  border: var(--border);
+  box-shadow: var(--shadow-hard-sm);
+  cursor: pointer;
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.yantra__node:hover, .yantra__node:focus-visible {
+  transform: translate(-50%, -50%) scale(1.08) rotate(-1.5deg);
+  box-shadow: 9px 9px 0 var(--ink);
+  outline: none;
+  background: var(--accent);
+  color: var(--paper);
+}
+.yantra__glyph { font-family: var(--serif); font-size: 34px; line-height: 1; color: var(--accent); }
+.yantra__node:hover .yantra__glyph, .yantra__node:focus-visible .yantra__glyph { color: var(--paper); }
+.yantra__label { font-family: var(--heavy); font-size: 11px; letter-spacing: 1px; text-align: center; }
+.yantra__domain { font-family: var(--mono); font-size: 9px; letter-spacing: 2px; opacity: .7; }
+
+@media (max-width: 560px) {
+  .yantra__node { width: 92px; padding: 7px 4px; }
+  .yantra__glyph { font-size: 26px; }
+  .yantra__label { font-size: 9px; }
+}
+
+/* ══════════════════════════════════════════════════════════
+   REALM  +  2.5D PARALLAX STAGE
+   ══════════════════════════════════════════════════════════ */
+.realm { position: relative; }
+.stage {
+  position: relative;
+  overflow: hidden;
+  border-top: var(--border);
+  border-bottom: var(--border);
+  background: var(--ink);
+  padding: 0;
+  isolation: isolate;
+}
+.stage__layer { position: absolute; inset: -12% 0; z-index: 0; pointer-events: none; }
+.stage__layer img { width: 100%; height: 100%; object-fit: cover; }
+.stage__sky { z-index: 0; }
+.stage__mid { z-index: 1; }
+.stage__fore { z-index: 2; inset: auto 0 -12% 0; height: 60%; }
+
+/* placeholder fills so the realm reads before art exists */
+.stage__ph { width: 100%; height: 100%; }
+.stage__ph--sky {
+  background:
+    radial-gradient(120% 90% at 50% 0%, color-mix(in srgb, var(--realm) 55%, #000) 0%, var(--ink) 70%);
+}
+.stage__ph--mid {
+  display: grid; place-items: center;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 38px, rgba(255,255,255,.03) 38px 40px);
+  -webkit-mask-image: linear-gradient(to top, #000 0%, transparent 78%);
+  mask-image: linear-gradient(to top, #000 0%, transparent 78%);
+}
+.stage__phlabel {
+  font-family: var(--mono); font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--paper); border: 2px dashed var(--paper); padding: 6px 12px; opacity: .4;
+}
+.stage__ph--fore {
+  background: linear-gradient(to top, color-mix(in srgb, var(--realm) 60%, #000), transparent);
+}
+.stage__content {
+  position: relative;
+  z-index: 5;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 70px 24px 84px;
+}
+
+/* ── guide (portrait + typewriter) ── */
+.guide { display: grid; grid-template-columns: 260px 1fr; gap: 26px; align-items: stretch; }
+.guide__portrait {
+  position: relative;
+  border: var(--border);
+  box-shadow: var(--shadow-hard);
+  background:
+    repeating-linear-gradient(45deg, rgba(0,0,0,.25) 0 10px, rgba(0,0,0,.4) 10px 20px);
+  aspect-ratio: 3 / 4;
+  display: grid; place-items: center;
+  overflow: hidden;
+}
+.guide__portrait img { width: 100%; height: 100%; object-fit: cover; }
+.guide__glyph { font-family: var(--serif); font-size: clamp(80px, 16vw, 150px); color: var(--accent); }
+.guide__realm {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  font-family: var(--mono); font-size: 11px; letter-spacing: 3px; text-align: center;
+  background: var(--ink); color: var(--paper); padding: 6px;
+}
+.guide__panel {
+  border: var(--border);
+  background: var(--paper);
+  box-shadow: var(--shadow-hard);
+  padding: 22px 24px;
+  display: flex; flex-direction: column;
+}
+.guide__domain {
+  align-self: flex-start;
+  font-family: var(--mono); font-size: 11px; letter-spacing: 3px;
+  background: var(--ink); color: var(--paper); padding: 3px 8px;
+}
+.guide__name {
+  font-family: var(--display);
+  font-size: clamp(26px, 5vw, 46px);
+  line-height: .95; margin: 12px 0 10px; text-transform: uppercase;
+  color: var(--ink);
+}
+.guide__say {
+  font-family: var(--mono); font-size: 15px; line-height: 1.6;
+  min-height: 5.5em; color: var(--indigo);
+}
+.guide__say .caret { color: var(--vermillion); animation: blink .8s step-end infinite; }
+.guide__stats { margin-top: auto; padding-top: 16px; display: grid; gap: 6px; max-width: 320px; }
+
+/* ── quests grid ── */
+.realm__quests {
+  margin-top: 34px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+}
+.quest {
+  position: relative;
+  display: flex; flex-direction: column;
+  border: var(--border);
+  background: var(--paper);
+  box-shadow: var(--shadow-hard-sm);
+  padding: 20px 18px 16px;
+  text-decoration: none; color: var(--ink);
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.quest--link { cursor: pointer; }
+.quest--link:hover { transform: translate(-4px,-4px) rotate(-.5deg); box-shadow: 10px 10px 0 var(--ink); }
+.quest__no { font-family: var(--mono); font-size: 10px; letter-spacing: 2px; color: var(--vermillion); }
+.quest__artifact { font-family: var(--serif); font-size: 46px; line-height: 1; color: var(--accent); margin: 6px 0 8px; }
+.quest__title { font-family: var(--heavy); font-size: 18px; text-transform: uppercase; letter-spacing: -.5px; }
+.quest__blurb { font-family: var(--mono); font-size: 12.5px; line-height: 1.55; margin: 8px 0 14px; flex: 1; }
+.quest__foot { display: flex; justify-content: space-between; align-items: center; border-top: 3px solid var(--ink); padding-top: 10px; }
+.quest__reward { font-family: var(--mono); font-size: 11px; letter-spacing: 1px; color: var(--teal); font-weight: 700; }
+.quest__go { font-family: var(--mono); font-size: 11px; letter-spacing: 1px; font-weight: 700; }
+
+@media (max-width: 720px) {
+  .guide { grid-template-columns: 1fr; }
+  .guide__portrait { aspect-ratio: 4 / 3; max-height: 320px; }
+  .stage__content { padding: 44px 16px 56px; }
+}
+
 footer {
   text-align: center;
   padding: 40px 24px 60px;
