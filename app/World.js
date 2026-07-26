@@ -1,38 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { world, characters, ticker } from "./site.config";
-
-/* ─── decorative mandala / chakra (pure SVG, no assets) ─── */
-function Mandala({ className, spokes = 24 }) {
-  const rays = Array.from({ length: spokes }, (_, i) => {
-    const a = (i / spokes) * Math.PI * 2;
-    return (
-      <line
-        key={i}
-        x1={100} y1={100}
-        x2={100 + Math.cos(a) * 96} y2={100 + Math.sin(a) * 96}
-        stroke="currentColor" strokeWidth="2"
-      />
-    );
-  });
-  return (
-    <svg className={className} viewBox="0 0 200 200" aria-hidden="true">
-      <circle cx="100" cy="100" r="96" fill="none" stroke="currentColor" strokeWidth="3" />
-      <circle cx="100" cy="100" r="70" fill="none" stroke="currentColor" strokeWidth="2" />
-      <circle cx="100" cy="100" r="42" fill="none" stroke="currentColor" strokeWidth="2" />
-      <circle cx="100" cy="100" r="14" fill="currentColor" />
-      {rays}
-      {Array.from({ length: 12 }, (_, i) => {
-        const a = (i / 12) * Math.PI * 2;
-        return (
-          <circle key={`p${i}`} cx={100 + Math.cos(a) * 70} cy={100 + Math.sin(a) * 70} r="6"
-            fill="none" stroke="currentColor" strokeWidth="2" />
-        );
-      })}
-    </svg>
-  );
-}
+import { world, characters, ticker, threshold } from "./site.config";
+import { useSmoothScroll } from "./lib/motion";
+import { useReveal, useParallax } from "./lib/useReveal";
+import Mandala from "./components/Mandala";
+import ParallaxStage from "./components/ParallaxStage";
+import Guide from "./components/Guide";
+import QuestCard from "./components/QuestCard";
+import Yantra from "./components/Yantra";
 
 /* ─── boot / loading screen ─── */
 function Boot({ done }) {
@@ -77,94 +53,60 @@ function Ticker({ reverse }) {
 }
 
 /* ─── top HUD ─── */
-function Hud() {
+function Hud({ onMap }) {
   return (
     <div className="hud">
       <div className="hud__cell hud__cell--brand">{world.name}</div>
       <div className="hud__cell">
-        CRAFT
-        <span className="hud__meter"><i style={{ width: "88%", background: "var(--teal)" }} /></span>
+        CRAFT<span className="hud__meter"><i style={{ width: "88%", background: "var(--teal)" }} /></span>
       </div>
       <div className="hud__cell">
-        CHAOS
-        <span className="hud__meter"><i style={{ width: "72%", background: "var(--vermillion)" }} /></span>
+        CHAOS<span className="hud__meter"><i style={{ width: "72%", background: "var(--vermillion)" }} /></span>
       </div>
       <div className="hud__spacer" />
-      <div className="hud__cell hud__coin">◎ {characters.length} GUIDES</div>
+      <button className="hud__cell hud__map" onClick={onMap}>◈ MAP</button>
+      <div className="hud__cell hud__coin">◎ {characters.length} REALMS</div>
       <div className="hud__cell">{world.version}</div>
     </div>
   );
 }
 
-/* ─── character card ─── */
-function Card({ c }) {
+/* ─── a single realm scene ─── */
+function Realm({ character, refFn }) {
+  const { id, layers, accent, quests } = character;
   return (
-    <article className="card" tabIndex={0}>
-      <span className="card__id">{c.id}</span>
-      <div className="card__frame">
-        {c.art ? (
-          <img src={c.art} alt={c.name} />
-        ) : (
-          <>
-            <span className="card__glyph" style={{ color: `var(${c.accent})` }}>{c.glyph}</span>
-            <span className="card__drop">drop art → /public/characters/</span>
-          </>
-        )}
-      </div>
-      <div className="card__body">
-        <span className="card__domain">{c.domain}</span>
-        <h3 className="card__name">{c.name}</h3>
-        <p className="card__line">“{c.line}”</p>
-        <div className="card__stats">
-          {Object.entries(c.stats).map(([k, v]) => (
-            <div className="stat" key={k}>
-              <span className="stat__k">{k}</span>
-              <span className="stat__bar"><i style={{ width: `${v}%`, background: `var(${c.accent})` }} /></span>
-            </div>
+    <section className="realm" id={`realm-${id}`} ref={refFn}>
+      <ParallaxStage layers={layers} accent={accent}>
+        <Guide character={character} />
+        <div className="realm__quests">
+          {quests.map((q, i) => (
+            <QuestCard key={i} quest={q} accent={accent} index={i} />
           ))}
         </div>
-      </div>
-    </article>
-  );
-}
-
-/* ─── footer NPC with typewriter ─── */
-function Dialogue() {
-  const full =
-    "You made it to the edge of the prologue. The rest of the world is still being built — regions, quests, real projects. Come back and watch it grow.";
-  const [txt, setTxt] = useState("");
-  const iRef = useRef(0);
-
-  useEffect(() => {
-    const id = setInterval(() => {
-      iRef.current += 1;
-      setTxt(full.slice(0, iRef.current));
-      if (iRef.current >= full.length) clearInterval(id);
-    }, 28);
-    return () => clearInterval(id);
-  }, []);
-
-  return (
-    <div className="dialogue">
-      <div className="dialogue__ava">ग</div>
-      <div>
-        <div className="dialogue__name">▸ THE GATEKEEPER</div>
-        <div className="dialogue__text">{txt}<span className="caret">▌</span></div>
-      </div>
-    </div>
+      </ParallaxStage>
+    </section>
   );
 }
 
 /* ─── main experience ─── */
 export default function World() {
   const [ready, setReady] = useState(false);
-  const rosterRef = useRef(null);
+  const hubRef = useRef(null);
+  const realmRefs = useRef({});
+
+  useSmoothScroll();
+  const revealScope = useReveal();
+  const parallaxScope = useParallax();
+
+  const goTo = (el) => el?.scrollIntoView({ behavior: "smooth", block: "start" });
+  const toHub = () => goTo(hubRef.current);
+  const toRealm = (id) => goTo(realmRefs.current[id]);
 
   return (
-    <>
+    <div ref={parallaxScope}>
       {!ready && <Boot done={() => setReady(true)} />}
 
-      <Hud />
+      <Hud onMap={toHub} />
       <Ticker />
 
       {/* HERO / TITLE */}
@@ -177,62 +119,67 @@ export default function World() {
         <p className="hero__player">
           PLAYER: <b>{world.player}</b> · {world.role}
         </p>
-        <button
-          className="startbtn"
-          onClick={() => rosterRef.current?.scrollIntoView({ behavior: "smooth" })}
-        >
-          ▶ PRESS START
-        </button>
+        <button className="startbtn" onClick={toHub}>▶ PRESS START</button>
       </header>
 
       <Ticker reverse />
 
-      {/* build note — delete this block when you ship */}
-      <div className="buildnote">
-        <div>
-          ⚙ BUILD NOTE — edit <b>app/site.config.js</b> for names &amp; lore ·
-          drop character art in <b>public/characters/</b> · this banner lives in <b>app/World.js</b>.
-        </div>
+      <div ref={revealScope}>
+        {/* LORE */}
+        <section className="section">
+          <div className="section__head">
+            <span className="section__num">00</span>
+            <h2 className="section__title">
+              THE MYTH<small>प्रस्तावना · prologue</small>
+            </h2>
+          </div>
+          <div className="lore" data-reveal>
+            <span className="lore__stamp">ॐ</span>
+            {world.lore.map((line, i) => <p key={i}>{line}</p>)}
+          </div>
+        </section>
+
+        {/* YANTRA HUB — realm map */}
+        <section className="section" ref={hubRef}>
+          <div className="section__head">
+            <span className="section__num">01</span>
+            <h2 className="section__title">
+              CHOOSE YOUR REALM<small>each realm is a piece of the maker</small>
+            </h2>
+          </div>
+          <Yantra characters={characters} onSelect={toRealm} />
+        </section>
       </div>
 
-      {/* LORE */}
-      <section className="section">
-        <div className="section__head">
-          <span className="section__num">00</span>
-          <h2 className="section__title">
-            THE MYTH
-            <small>प्रस्तावना · prologue</small>
-          </h2>
-        </div>
-        <div className="lore">
-          <span className="lore__stamp">ॐ</span>
-          {world.lore.map((line, i) => <p key={i}>{line}</p>)}
-        </div>
-      </section>
+      {/* THE REALMS */}
+      {characters.map((c) => (
+        <Realm
+          key={c.id}
+          character={c}
+          refFn={(el) => (realmRefs.current[c.id] = el)}
+        />
+      ))}
 
-      {/* ROSTER */}
-      <section className="section" ref={rosterRef}>
-        <div className="section__head">
-          <span className="section__num">01</span>
-          <h2 className="section__title">
-            SELECT YOUR GUIDE
-            <small>each one is a piece of the maker</small>
-          </h2>
-        </div>
-        <div className="roster">
-          {characters.map((c) => <Card key={c.id} c={c} />)}
-        </div>
-      </section>
-
-      {/* DIALOGUE */}
+      {/* THRESHOLD — closing NPC / contact */}
       <section className="section">
-        <Dialogue />
+        <div className="dialogue">
+          <div className="dialogue__ava">{threshold.glyph}</div>
+          <div>
+            <div className="dialogue__name">▸ {threshold.name}</div>
+            <div className="dialogue__text">{threshold.text}</div>
+            {threshold.cta && (
+              <a className="dialogue__cta" href={threshold.cta.href}>
+                {threshold.cta.label} ▸
+              </a>
+            )}
+          </div>
+        </div>
       </section>
 
       <Ticker />
       <footer>
         {world.name} · built by one hand with <span className="heart">♥</span> &amp; chaos · {world.version}
       </footer>
-    </>
+    </div>
   );
 }
