@@ -1,0 +1,35 @@
+/* ─────────────────────────────────────────────────────────────
+   CHAPTER 0 — THE SILENCE BEFORE CREATION
+   Scene 0.0: a real-time void. The canvas is the world; this file
+   only owns the container and a subtle vignette over the edges.
+   ───────────────────────────────────────────────────────────── */
+
+.void {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #000;
+  cursor: none; /* no cursor in the void */
+}
+
+.canvas {
+  position: absolute !important;
+  inset: 0;
+  display: block;
+}
+
+/* deepen the edges so the void has no seams */
+.vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(120% 90% at 50% 50%, transparent 40%, rgba(0,0,0,0.75) 100%);
+  z-index: 2;
+}
+
+/* nothing to see if scripts/WebGL are unavailable — stay in the dark */
+.fallback {
+  position: fixed;
+  inset: 0;
+  background: #000;
+}
