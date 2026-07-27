@@ -1,8 +1,8 @@
 "use client";
 
-// Live-tunable config for the void. The control panel (leva, wired in
-// Chapter0) writes here; the scene components read it every frame.
-// Tune in the panel, then hit "log settings" and paste me the numbers.
+// Tuned config for the void — the scene components read these each
+// frame. These are the locked-in Scene 0.1 values (the dev control
+// panel has been removed now that the look is dialled in).
 
 export const dev = {
   // veil (Scene 0.1) — restrained; the light IS the seam
