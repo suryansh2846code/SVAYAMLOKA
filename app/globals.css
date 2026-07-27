@@ -1,5 +1,5 @@
 /* Fonts — @import so the site still looks brutalist if offline (system fallbacks). */
-@import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:wght@400;700&family=Rubik+Mono+One&family=DM+Serif+Display:ital@0;1&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:wght@400;700&family=Rubik+Mono+One&family=DM+Serif+Display:ital@0;1&family=Cormorant+Garamond:wght@300;400&display=swap');
 
 :root {
   --paper:      #f3e9d2;   /* aged paper */
