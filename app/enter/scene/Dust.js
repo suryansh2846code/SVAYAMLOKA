@@ -63,9 +63,20 @@ export default function Dust({ pulse }) {
 
     // the pulse: reality exhales (shock>0), then inhales (shock<0)
     const shock = pulse ? pulse.shock : 0;
+    // Scene 0.2: one lone mote stops drifting and seeks the centre
+    const seek = pulse ? pulse.seek : 0;
 
     for (let i = 0; i < COUNT; i++) {
       const ix = i * 3;
+
+      if (i === 0 && seek > 0) {
+        // the wandering particle — barely, toward the middle of the void
+        pos[ix] += (0 - pos[ix]) * 0.004 * seek * dt;
+        pos[ix + 1] += (0 - pos[ix + 1]) * 0.004 * seek * dt;
+        pos[ix + 2] += (0 - pos[ix + 2]) * 0.004 * seek * dt;
+        continue;
+      }
+
       pos[ix] += (velocities[ix] + drift.current.x * 0.01) * dt;
       pos[ix + 1] += (velocities[ix + 1] + drift.current.y * 0.01) * dt;
       pos[ix + 2] += velocities[ix + 2] * dt;
@@ -90,10 +101,13 @@ export default function Dust({ pulse }) {
     }
     pointsRef.current.geometry.attributes.position.needsUpdate = true;
 
-    // ease opacity in over the first ~4s → open on true black
+    // ease opacity in over the first ~4s → open on true black.
+    // As the guardian's eyes ignite, the world dims around them (they
+    // don't), so the gaze reads as something that cannot be hidden.
     if (matRef.current) {
-      const targetOpacity = dev.dustOpacity;
-      matRef.current.opacity += (targetOpacity - matRef.current.opacity) * 0.01;
+      const eg = pulse ? pulse.eyeGlow || 0 : 0;
+      const targetOpacity = dev.dustOpacity * (1 - 0.5 * eg);
+      matRef.current.opacity += (targetOpacity - matRef.current.opacity) * 0.02;
       matRef.current.size = dev.dustSize;
     }
   });

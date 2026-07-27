@@ -7,10 +7,15 @@
 export const dev = {
   // veil (Scene 0.1) — restrained; the light IS the seam
   seamBright: 0.45,      // brightness of the luminous seams
-  guardianAmount: 0.18,  // how perceptible the guardian is behind the membrane
+  guardianAmount: 0.12,  // how perceptible the guardian is (darker now)
   fillDuration: 0.9,     // (reserved) seam travel time
-  veilOpen: 1.0,         // preview: membrane openness when "hold visible"
-  preview: false,        // HOLD the seams lit so you can study them
+  veilOpen: 1.0,         // membrane openness when the guardian is held
+
+  // hold flags — freeze individual elements visible (dev controls)
+  holdSeams: false,
+  holdText: false,
+  holdText2: false,
+  holdGuardian: false,
 
   // the living flow — bright pulses travelling inside the fractures
   flowSpeed: 0.5,        // how fast the pulses travel

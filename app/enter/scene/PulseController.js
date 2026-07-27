@@ -14,7 +14,7 @@
 
 import { useEffect } from "react";
 import { gsap } from "gsap";
-import { playThump, playWhisper } from "./audio";
+import { playThump, playWhisper, playDistantBell } from "./audio";
 import { dev } from "./dev";
 
 export default function PulseController({ woken, pulse, trigger = 0 }) {
@@ -36,8 +36,12 @@ export default function PulseController({ woken, pulse, trigger = 0 }) {
     tl.to(p, { shock: 0, duration: 0.8, ease: "power2.inOut" }, 0.08);
 
     // the veins snap into being (a blink) — corner → centre, but fast
+    tl.set(p, { fade: 1 }, 0);
     tl.fromTo(p, { reveal: 0 }, { reveal: 1.12, duration: 0.18, ease: "power4.out" }, 0);
     tl.fromTo(p, { flash: 1.1 }, { flash: 0, duration: 0.35, ease: "power2.out" }, 0);
+
+    // warm light washes into the void from the cracks
+    tl.fromTo(p, { env: 0 }, { env: 1, duration: 0.22, ease: "power2.out" }, 0);
 
     // ── the guardian appears behind the veins ──
     tl.fromTo(p, { open: 0 }, { open: 1, duration: 0.45, ease: "power2.out" }, 0.18);
@@ -45,11 +49,54 @@ export default function PulseController({ woken, pulse, trigger = 0 }) {
     // hold the impossible instant (brief)
     const exit = 1.15;
 
-    // ── BLINK OUT — another flash, then everyone is gone ──
-    tl.to(p, { flash: 0.9, duration: 0.05, ease: "power2.out" }, exit);
-    tl.to(p, { flash: 0, duration: 0.3, ease: "power2.out" }, exit + 0.05);
-    tl.to(p, { reveal: 0, duration: 0.22, ease: "power3.in" }, exit);      // veins blink out
-    tl.to(p, { open: 0, duration: 0.28, ease: "power2.in" }, exit + 0.04); // guardian gone
+    // ── BLINK OUT — the whole network fades out smoothly, together ──
+    tl.to(p, { fade: 0, duration: 0.4, ease: "power2.inOut" }, exit);
+    tl.to(p, { open: 0, duration: 0.4, ease: "power2.inOut" }, exit);
+    tl.to(p, { env: 0, duration: 0.6, ease: "power2.inOut" }, exit);
+    // reset the network offscreen once it's fully dark (invisible)
+    tl.set(p, { reveal: 0 }, exit + 0.7);
+
+    // ═══ SCENE 0.2 — THE FIRST MEMORY ═══════════════════════════
+    // Darkness has returned. Stillness. One mote strays to the centre.
+    // Then a single line is remembered — it surfaces, holds, and sinks
+    // back, leaving a one-frame seam-memory behind it.
+    const s2 = exit + 2.0; // a held silence after the seams heal
+
+    // the lone particle begins its slow drift inward (~1.5s before words)
+    tl.set(p, { seek: 1 }, s2 - 1.5);
+
+    // the words are remembered — surfacing from the dark
+    tl.to(p, { text: 1, duration: 1.7, ease: "power2.out" }, s2);
+    tl.call(() => playDistantBell(), null, s2 + 0.4); // a bell across impossible distance
+
+    // hold in stillness, then darkness forgets it again
+    const forget = s2 + 3.6;
+    tl.to(p, { text: 0, duration: 1.8, ease: "power2.inOut" }, forget);
+
+    // the mote settles back into ordinary drift; silence remains
+    tl.set(p, { seek: 0 }, forget + 2.2);
+
+    // ═══ SCENE 0.4 — THE SECOND MEMORY awakens the guardian ═══
+    // The words come FIRST, row by row. Only then do his eyes ignite —
+    // so the viewer feels the line itself awakened him.
+    const s4 = forget + 4.0; // an uneasy silence after the first words
+
+    // "…memory had"
+    tl.call(() => playDistantBell(), null, s4);
+    tl.to(p, { text2a: 1, duration: 1.3, ease: "power2.out" }, s4);
+    // 0.8s pause → "already awakened."
+    tl.to(p, { text2b: 1, duration: 1.3, ease: "power2.out" }, s4 + 2.1);
+
+    // 0.5s pause → his eyes IGNITE: 1 → 2 → 5 → 8 → 10 → 20 → 40%, stop
+    const ig = s4 + 3.9;
+    tl.call(() => playDistantBell(), null, ig);
+    tl.to(p, { eyeGlow: 0.025, duration: 0.9, ease: "none" }, ig);
+    tl.to(p, { eyeGlow: 0.05, duration: 0.7, ease: "none" }, ig + 0.9);
+    tl.to(p, { eyeGlow: 0.125, duration: 0.7, ease: "none" }, ig + 1.6);
+    tl.to(p, { eyeGlow: 0.2, duration: 0.6, ease: "none" }, ig + 2.3);
+    tl.to(p, { eyeGlow: 0.25, duration: 0.5, ease: "none" }, ig + 2.9);
+    tl.to(p, { eyeGlow: 0.5, duration: 0.5, ease: "none" }, ig + 3.4);
+    tl.to(p, { eyeGlow: 1.0, duration: 0.6, ease: "power2.in" }, ig + 3.9); // stop at ~40%
 
     return () => tl.kill();
   }, [woken, pulse, trigger]);

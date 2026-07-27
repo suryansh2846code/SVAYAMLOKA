@@ -218,3 +218,33 @@ export function playWhisper() {
   src.start(t);
   src.stop(t + dur);
 }
+
+// ── A DISTANT BELL ── a temple bell heard across impossible distances:
+//    faint, high, inharmonic, long decay. Used sparingly in Scene 0.2.
+export function playDistantBell() {
+  const context = getCtx();
+  if (!context) return;
+  const t = context.currentTime;
+
+  const bus = context.createGain();
+  bus.gain.value = 0.5;
+  bus.connect(context.destination);
+
+  const lp = context.createBiquadFilter();
+  lp.type = "lowpass";
+  lp.frequency.value = 2600;
+  lp.connect(bus);
+
+  [1046, 1567, 2093].forEach((f, i) => {
+    const osc = context.createOscillator();
+    osc.type = "sine";
+    osc.frequency.value = f * (1 + (Math.random() - 0.5) * 0.008);
+    const g = context.createGain();
+    const peak = 0.012 / (i + 1);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(peak, t + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 3.0 + i * 0.4);
+    osc.connect(g); g.connect(lp);
+    osc.start(t); osc.stop(t + 3.4 + i * 0.4);
+  });
+}

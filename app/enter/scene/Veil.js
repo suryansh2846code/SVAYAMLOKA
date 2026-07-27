@@ -9,8 +9,8 @@
 //   pulse.reveal → the travelling light along the seams (0..1)
 //   pulse.open   → how transparent the membrane is (guardian/beneath)
 
-import { useMemo, useRef, Suspense } from "react";
-import { useFrame, useLoader } from "@react-three/fiber";
+import { useMemo, useRef } from "react";
+import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { buildSeams } from "./seams";
 import { dev } from "./dev";
@@ -23,7 +23,6 @@ const smooth = (a, b, x) => {
 const TAU = Math.PI * 2;
 const GOLD = [0.85, 0.7, 0.42];
 const IVORY = [0.97, 0.92, 0.8];
-const GUARDIAN_SRC = "/characters/me/76ed1ddf-0eaf-4103-afde-957f1d11235c.png";
 
 function Seams({ pulse }) {
   const { positions, dist, weight, vertexCount } = useMemo(() => buildSeams(7), []);
@@ -38,8 +37,10 @@ function Seams({ pulse }) {
 
   useFrame((state) => {
     const t = state.clock.elapsedTime;
-    const front = dev.preview ? 1.1 : pulse.reveal;
-    const bright = dev.seamBright * (1 + (pulse.flash || 0)); // snap punch
+    const holding = dev.holdSeams;
+    const front = holding ? 1.1 : pulse.reveal;
+    const fade = holding ? 1 : (pulse.fade == null ? 1 : pulse.fade); // uniform blink-out
+    const bright = dev.seamBright * (holding ? 1 : 1 + (pulse.flash || 0)) * fade;
     const speed = dev.flowSpeed;
     const freq = dev.flowFreq;
     const strength = dev.flowStrength;
@@ -89,55 +90,8 @@ function Seams({ pulse }) {
   );
 }
 
-// a small soft window near the crown/hands — the guardian barely surfaces
-function featherTexture() {
-  const w = 256, h = 384;
-  const c = document.createElement("canvas");
-  c.width = w; c.height = h;
-  const ctx = c.getContext("2d");
-  const cx = w * 0.5, cy = h * 0.32, r = w * 0.5;
-  const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
-  g.addColorStop(0, "rgba(255,255,255,0.85)");
-  g.addColorStop(0.5, "rgba(255,255,255,0.3)");
-  g.addColorStop(1, "rgba(255,255,255,0)");
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, w, h);
-  return new THREE.CanvasTexture(c);
-}
-
-function Guardian({ pulse }) {
-  const tex = useLoader(THREE.TextureLoader, GUARDIAN_SRC);
-  const alpha = useMemo(featherTexture, []);
-  const matRef = useRef();
-  useFrame(() => {
-    if (!matRef.current) return;
-    const open = dev.preview ? dev.veilOpen : pulse.open;
-    matRef.current.opacity = open * dev.guardianAmount;
-  });
-  return (
-    <mesh position={[0, -0.6, -4]} renderOrder={0}>
-      <planeGeometry args={[6, 9]} />
-      <meshBasicMaterial
-        ref={matRef}
-        map={tex}
-        alphaMap={alpha}
-        color="#5c4e34"        /* warm, dim — behind the membrane */
-        transparent
-        opacity={0}
-        depthWrite={false}
-        depthTest={false}
-        toneMapped={false}
-        blending={THREE.AdditiveBlending}
-      />
-    </mesh>
-  );
-}
+// (the guardian now lives in its own component — Guardian.js)
 
 export default function Veil({ pulse }) {
-  return (
-    <Suspense fallback={null}>
-      <Guardian pulse={pulse} />
-      <Seams pulse={pulse} />
-    </Suspense>
-  );
+  return <Seams pulse={pulse} />;
 }

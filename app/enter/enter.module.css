@@ -33,3 +33,82 @@
   inset: 0;
   background: #000;
 }
+
+/* ── minimal dev controls (hold / replay) ── */
+.controls {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: default;
+}
+.ctrllabel {
+  font-family: 'Space Mono', ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(232, 226, 211, 0.4);
+  margin-right: 2px;
+}
+.ctrlbtn {
+  font-family: 'Space Mono', ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 8px 13px;
+  color: #e8e2d3;
+  background: rgba(18, 18, 22, 0.55);
+  border: 1px solid rgba(232, 226, 211, 0.22);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.ctrlbtn:hover { background: rgba(44, 44, 52, 0.8); }
+.ctrlbtnOn { background: #c8a96a; color: #14110b; border-color: #c8a96a; }
+
+/* ── environmental light cast by the cracks ── */
+.envlight {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0;
+  background:
+    radial-gradient(60% 55% at 28% 72%, rgba(200, 169, 106, 0.55), transparent 70%),
+    radial-gradient(95% 85% at 55% 45%, rgba(150, 112, 58, 0.28), transparent 78%);
+  mix-blend-mode: screen;
+}
+
+/* ── Scene 0.2 — the first remembered words ── */
+.narration {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 24%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15em;
+  pointer-events: none;
+  z-index: 3;
+}
+.line {
+  margin: 0;
+  max-width: 80%;
+  text-align: center;
+  font-family: 'Cormorant Garamond', 'Georgia', serif;
+  font-weight: 300;
+  font-size: clamp(18px, 3.1vw, 38px);   /* ~9% smaller */
+  letter-spacing: 0.18em;                /* tighter */
+  line-height: 1.5;
+  color: #E8E2D3;               /* almost ivory — old paper, never pure white */
+}
+.char {
+  display: inline-block;
+  white-space: pre;             /* keep the spaces between words */
+  opacity: 0;
+  will-change: opacity, filter;
+}

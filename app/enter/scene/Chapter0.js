@@ -12,7 +12,13 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import Dust from "./Dust";
 import CameraRig from "./CameraRig";
 import Veil from "./Veil";
+import Guardian from "./Guardian";
+import Narration from "./Narration";
+import EnvLight from "./EnvLight";
 import PulseController from "./PulseController";
+
+const LINE_1 = ["Before light", "sought the stars…"];
+const LINE_2 = ["…memory had", "already awakened."];
 import { useDrone } from "./useDrone";
 import { dev } from "./dev";
 import styles from "../enter.module.css";
@@ -38,10 +44,22 @@ function WorldShake({ pulse, children }) {
 export default function Chapter0() {
   const [phase] = useState("SILENCE");
   const [woken, setWoken] = useState(false);
+  const [trigger, setTrigger] = useState(0);
+  const [holds, setHolds] = useState({ seams: false, text: false, text2: false, guardian: false });
 
   const pulse = useRef({
     shock: 0, reveal: 0, open: 0, shake: 0, flash: 0,
+    fade: 1, env: 0, text: 0, text2a: 0, text2b: 0, seek: 0, eyeGlow: 0,
   }).current;
+
+  // HOLD freezes chosen elements visible (study); REPLAY re-runs the scene
+  useEffect(() => {
+    dev.holdSeams = holds.seams;
+    dev.holdText = holds.text;
+    dev.holdText2 = holds.text2;
+    dev.holdGuardian = holds.guardian;
+  }, [holds]);
+  const toggle = (k) => setHolds((s) => ({ ...s, [k]: !s[k] }));
 
   useEffect(() => {
     const wake = () => setWoken(true);
@@ -70,7 +88,10 @@ export default function Chapter0() {
       >
         <color attach="background" args={["#040406"]} />
 
-        {/* the veil is the void itself (backdrop) */}
+        {/* the guardian — always there at ~3%, hidden in the dark */}
+        <Guardian pulse={pulse} />
+
+        {/* the seams of the veil */}
         <Veil pulse={pulse} />
 
         {/* dust drifts in front of the membrane */}
@@ -81,9 +102,43 @@ export default function Chapter0() {
         <CameraRig />
       </Canvas>
 
-      <PulseController woken={woken} pulse={pulse} />
+      <EnvLight pulse={pulse} />
+      <Narration pulse={pulse} rows={LINE_1} field="text" holdKey="holdText" />
+      <Narration pulse={pulse} rows={LINE_2} field={["text2a", "text2b"]} holdKey="holdText2" />
+      <PulseController woken={woken} pulse={pulse} trigger={trigger} />
 
       <div className={styles.vignette} aria-hidden="true" />
+
+      <div className={styles.controls}>
+        <span className={styles.ctrllabel}>hold</span>
+        <button
+          className={`${styles.ctrlbtn} ${holds.seams ? styles.ctrlbtnOn : ""}`}
+          onClick={() => toggle("seams")}
+        >
+          seams
+        </button>
+        <button
+          className={`${styles.ctrlbtn} ${holds.text ? styles.ctrlbtnOn : ""}`}
+          onClick={() => toggle("text")}
+        >
+          text 1
+        </button>
+        <button
+          className={`${styles.ctrlbtn} ${holds.text2 ? styles.ctrlbtnOn : ""}`}
+          onClick={() => toggle("text2")}
+        >
+          text 2
+        </button>
+        <button
+          className={`${styles.ctrlbtn} ${holds.guardian ? styles.ctrlbtnOn : ""}`}
+          onClick={() => toggle("guardian")}
+        >
+          guardian
+        </button>
+        <button className={styles.ctrlbtn} onClick={() => setTrigger((t) => t + 1)}>
+          ▶ replay
+        </button>
+      </div>
     </div>
   );
 }
