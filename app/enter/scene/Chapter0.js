@@ -19,6 +19,7 @@ import PulseController from "./PulseController";
 
 const LINE_1 = ["Before light", "sought the stars…"];
 const LINE_2 = ["…memory had", "already awakened."];
+const LINE_3 = ["I was its first witness."];
 import { useDrone } from "./useDrone";
 import { dev } from "./dev";
 import styles from "../enter.module.css";
@@ -45,11 +46,13 @@ export default function Chapter0() {
   const [phase] = useState("SILENCE");
   const [woken, setWoken] = useState(false);
   const [trigger, setTrigger] = useState(0);
+  const [revealTrigger, setRevealTrigger] = useState(0);
   const [holds, setHolds] = useState({ seams: false, text: false, text2: false, guardian: false });
 
   const pulse = useRef({
     shock: 0, reveal: 0, open: 0, shake: 0, flash: 0,
-    fade: 1, env: 0, text: 0, text2a: 0, text2b: 0, seek: 0, eyeGlow: 0,
+    fade: 1, env: 0, text: 0, text2a: 0, text2b: 0, text3: 0,
+    seek: 0, eyeGlow: 0, emerge: 0, emergeArms: 0, push: 0,
   }).current;
 
   // HOLD freezes chosen elements visible (study); REPLAY re-runs the scene
@@ -99,13 +102,14 @@ export default function Chapter0() {
           <Dust pulse={pulse} />
         </WorldShake>
 
-        <CameraRig />
+        <CameraRig pulse={pulse} />
       </Canvas>
 
       <EnvLight pulse={pulse} />
       <Narration pulse={pulse} rows={LINE_1} field="text" holdKey="holdText" />
       <Narration pulse={pulse} rows={LINE_2} field={["text2a", "text2b"]} holdKey="holdText2" />
-      <PulseController woken={woken} pulse={pulse} trigger={trigger} />
+      <Narration pulse={pulse} rows={LINE_3} field="text3" holdKey="holdText3" small />
+      <PulseController woken={woken} pulse={pulse} trigger={trigger} revealTrigger={revealTrigger} />
 
       <div className={styles.vignette} aria-hidden="true" />
 
@@ -134,6 +138,9 @@ export default function Chapter0() {
           onClick={() => toggle("guardian")}
         >
           guardian
+        </button>
+        <button className={styles.ctrlbtn} onClick={() => setRevealTrigger((t) => t + 1)}>
+          ◑ reveal
         </button>
         <button className={styles.ctrlbtn} onClick={() => setTrigger((t) => t + 1)}>
           ▶ replay

@@ -15,6 +15,7 @@ export const dev = {
   holdSeams: false,
   holdText: false,
   holdText2: false,
+  holdText3: false,
   holdGuardian: false,
 
   // the living flow — bright pulses travelling inside the fractures

@@ -248,3 +248,51 @@ export function playDistantBell() {
     osc.start(t); osc.stop(t + 3.4 + i * 0.4);
   });
 }
+
+// ── STONE RESONANCE ── an ancient stone door moving somewhere beyond
+//    existence: a very low, slow swell with a grinding low-mid body.
+//    Plays once as the darkness recedes from the guardian.
+export function playStoneResonance() {
+  const context = getCtx();
+  if (!context) return;
+  const t = context.currentTime;
+  const dur = 6.5;
+
+  const bus = context.createGain();
+  bus.gain.setValueAtTime(0.0001, t);
+  bus.gain.exponentialRampToValueAtTime(0.08, t + 2.0); // slow swell in
+  bus.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  bus.connect(context.destination);
+
+  const lp = context.createBiquadFilter();
+  lp.type = "lowpass";
+  lp.frequency.value = 220;
+  lp.Q.value = 0.8;
+  lp.connect(bus);
+
+  // deep body — two detuned low saws ground through the lowpass
+  [30, 30.5, 46].forEach((f) => {
+    const osc = context.createOscillator();
+    osc.type = "sawtooth";
+    osc.frequency.value = f;
+    const g = context.createGain();
+    g.gain.value = 0.5;
+    osc.connect(g); g.connect(lp);
+    osc.start(t); osc.stop(t + dur);
+  });
+
+  // a faint grinding texture (filtered noise), like stone on stone
+  const noise = context.createBuffer(1, Math.floor(context.sampleRate * dur), context.sampleRate);
+  const data = noise.getChannelData(0);
+  for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * 0.5;
+  const src = context.createBufferSource();
+  src.buffer = noise;
+  const bp = context.createBiquadFilter();
+  bp.type = "bandpass";
+  bp.frequency.value = 90;
+  bp.Q.value = 2;
+  const ng = context.createGain();
+  ng.gain.value = 0.25;
+  src.connect(bp); bp.connect(ng); ng.connect(lp);
+  src.start(t); src.stop(t + dur);
+}

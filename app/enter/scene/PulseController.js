@@ -14,10 +14,42 @@
 
 import { useEffect } from "react";
 import { gsap } from "gsap";
-import { playThump, playWhisper, playDistantBell } from "./audio";
+import { playThump, playWhisper, playDistantBell, playStoneResonance } from "./audio";
 import { dev } from "./dev";
 
-export default function PulseController({ woken, pulse, trigger = 0 }) {
+// The First Witness reveal — the darkness recedes CONTINUOUSLY down the
+// centre body (crown → face → hands → torso → knees), and the arms flow
+// in later but stay partly in shadow (like the legs). One smooth motion,
+// no stops. Returns the time it ends.
+function addReveal(tl, p, t0) {
+  tl.to(p, { emerge: 0.9, duration: 5.4, ease: "sine.inOut" }, t0);            // body, seamless
+  tl.to(p, { emergeArms: 0.55, duration: 2.6, ease: "sine.inOut" }, t0 + 3.2); // arms, later & partial
+  return t0 + 6.5;
+}
+
+export default function PulseController({ woken, pulse, trigger = 0, revealTrigger = 0 }) {
+  // ── "watch reveal" — replay just the First Witness on demand ──
+  useEffect(() => {
+    if (!revealTrigger) return;
+    const p = pulse;
+    const tl = gsap.timeline({ delay: 0.15 });
+    // reset to a clean pre-reveal state, eyes already lit
+    tl.set(p, {
+      reveal: 0, fade: 1, open: 0, env: 0, shock: 0, shake: 0, seek: 0,
+      text: 0, text2a: 0, text2b: 0, text3: 0, eyeGlow: 1, emerge: 0, emergeArms: 0,
+    });
+    tl.call(() => playStoneResonance(), null, 0.2);
+    tl.to(p, { push: 1, duration: 8.0, ease: "sine.inOut" }, 0.3);
+    const end = addReveal(tl, p, 0.6);
+    tl.to(p, { text3: 1, duration: 2.0, ease: "power2.out" }, 3.0);
+    tl.to(p, { push: 0, duration: 3.0 }, end + 2.0);
+    return () => tl.kill();
+  }, [revealTrigger, pulse]);
+
+  return <PulseMain woken={woken} pulse={pulse} trigger={trigger} />;
+}
+
+function PulseMain({ woken, pulse, trigger = 0 }) {
   useEffect(() => {
     if (!woken) return;
 
@@ -97,6 +129,21 @@ export default function PulseController({ woken, pulse, trigger = 0 }) {
     tl.to(p, { eyeGlow: 0.25, duration: 0.5, ease: "none" }, ig + 2.9);
     tl.to(p, { eyeGlow: 0.5, duration: 0.5, ease: "none" }, ig + 3.4);
     tl.to(p, { eyeGlow: 1.0, duration: 0.6, ease: "power2.in" }, ig + 3.9); // stop at ~40%
+
+    // ═══ SCENE 0.4 — THE FIRST WITNESS ══════════════════════════
+    // The eyes hold (~3s). Then a deep stone resonance, and the DARKNESS
+    // RECEDES from him — top-down, uneven, never fully. The camera leans
+    // in a slow 5-8%. Then he states a fact (not an introduction).
+    const witness = ig + 3.9 + 3.0;
+    tl.call(() => playStoneResonance(), null, witness - 0.3);
+    // the previous line dissolves before the Witness speaks
+    tl.to(p, { text2a: 0, text2b: 0, duration: 1.3, ease: "power2.inOut" }, witness - 0.4);
+    tl.to(p, { push: 1, duration: 8.0, ease: "sine.inOut" }, witness);     // the lean-in
+    addReveal(tl, p, witness);                                             // stepped: crown→…→arms
+    tl.to(p, { text3: 1, duration: 2.0, ease: "power2.out" }, witness + 3.2);
+    tl.call(() => playDistantBell(), null, witness + 4.4);
+    // hold the (partly) revealed Witness — ~25% stays in darkness. Chapter
+    // 0.5 (the name + the gate) continues from here.
 
     return () => tl.kill();
   }, [woken, pulse, trigger]);

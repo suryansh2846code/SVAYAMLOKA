@@ -65,6 +65,8 @@ export default function Dust({ pulse }) {
     const shock = pulse ? pulse.shock : 0;
     // Scene 0.2: one lone mote stops drifting and seeks the centre
     const seek = pulse ? pulse.seek : 0;
+    // Scene 0.4: near the guardian, space stops — motes there go still
+    const emerge = pulse ? pulse.emerge || 0 : 0;
 
     for (let i = 0; i < COUNT; i++) {
       const ix = i * 3;
@@ -77,9 +79,16 @@ export default function Dust({ pulse }) {
         continue;
       }
 
-      pos[ix] += (velocities[ix] + drift.current.x * 0.01) * dt;
-      pos[ix + 1] += (velocities[ix + 1] + drift.current.y * 0.01) * dt;
-      pos[ix + 2] += velocities[ix + 2] * dt;
+      // motes near the guardian (centre) freeze as he emerges; far ones drift on
+      let mv = 1;
+      if (emerge > 0) {
+        const near = 1 - Math.min(1, Math.hypot(pos[ix], pos[ix + 1]) / 6);
+        mv = 1 - emerge * near;
+      }
+
+      pos[ix] += (velocities[ix] + drift.current.x * 0.01) * dt * mv;
+      pos[ix + 1] += (velocities[ix + 1] + drift.current.y * 0.01) * dt * mv;
+      pos[ix + 2] += velocities[ix + 2] * dt * mv;
 
       // radial push out from center, scaled by the shock envelope
       if (shock !== 0) {

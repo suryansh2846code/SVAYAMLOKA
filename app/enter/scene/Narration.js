@@ -14,7 +14,7 @@ const smooth = (a, b, x) => {
   return t * t * (3 - 2 * t);
 };
 
-export default function Narration({ pulse, rows, field, holdKey }) {
+export default function Narration({ pulse, rows, field, holdKey, small }) {
   const spansRef = useRef([]);
 
   const model = useMemo(() => {
@@ -59,7 +59,7 @@ export default function Narration({ pulse, rows, field, holdKey }) {
   return (
     <div className={styles.narration} aria-hidden="true">
       {model.rws.map((row, ri) => (
-        <p className={styles.line} key={ri}>
+        <p className={`${styles.line} ${small ? styles.lineSmall : ""}`} key={ri}>
           {row.map((c) => (
             <span
               key={c.gi}
